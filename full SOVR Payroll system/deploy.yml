@@ -1,0 +1,54 @@
+name: Deploy Payroll Contracts
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Set up Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+      - name: Install dependencies
+        run: forge install
+      - name: Run unit tests
+        run: forge test -vvv
+      - name: Deploy and commit deployments.json
+        env:
+          DEPLOYER_KEY: ${{ secrets.DEPLOYER_KEY }}
+          RPC_URL: https://sepolia.base.org
+          OPERATOR_ADDRESS: ${{ secrets.OPERATOR_ADDRESS }}
+        run: |
+          forge script script/DeployPayroll.s.sol \
+            --rpc-url $RPC_URL \
+            --broadcast \
+            -vvvv \
+            --json > out.json
+
+          # This logic is brittle and depends on the exact output of forge script.
+          # It assumes two contracts are deployed in a specific order.
+          SOVR_ADDR=$(jq -r '.returns."0".value' out.json)
+          PAYROLL_ADDR=$(jq -r '.returns."1".value' out.json)
+          BLOCK=$(jq -r '.receipts[0].blockNumber' out.json)
+          DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          echo '{
+            "network": "base-sepolia",
+            "contracts": {
+              "SOVRCredit": "'$SOVR_ADDR'",
+              "AutoPayroll": "'$PAYROLL_ADDR'"
+            },
+            "block": '$BLOCK',
+            "deployedAt": "'$DATE'"
+          }' > deployments.json
+
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git add deployments.json
+          git commit -m "chore: update deployments.json [skip ci]"
+          git push

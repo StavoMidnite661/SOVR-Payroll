@@ -1,0 +1,95 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: sovr_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sovr}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sovrpass}
+      POSTGRES_DB: ${POSTGRES_DB:-payroll}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - sovr-net
+
+  operator-dashboard:
+    build: ./operator-dashboard
+    container_name: sovr_dashboard_backend # Renamed for clarity
+    restart: always
+    env_file: .env
+    environment:
+      - POSTGRES_HOST=postgres
+      - DATABASE_URL=postgres://${POSTGRES_USER:-sovr}:${POSTGRES_PASSWORD:-sovrpass}@postgres:5432/${POSTGRES_DB:-payroll}
+    depends_on:
+      - postgres
+    networks:
+      - sovr-net
+
+  consul:
+    build: ./consul
+    container_name: sovr_consul
+    restart: always
+    env_file: .env
+    environment:
+      # Connect to the dashboard service within the Docker network
+      - DASHBOARD_WS_URL=ws://operator-dashboard:4000
+    depends_on:
+      - operator-dashboard
+      - postgres
+    networks:
+      - sovr-net
+
+  dashboard-ui:
+    build: ./dashboard-ui
+    container_name: sovr_dashboard_ui # Renamed for clarity
+    restart: always
+    environment:
+      # The browser will connect to the public, TLS-secured URL
+      - NEXT_PUBLIC_WS_URL=wss://consul.sovrpayroll.io
+    ports:
+      - "3000:3000"
+    networks:
+      - sovr-net
+
+  nginx:
+    image: nginx:latest
+    container_name: sovr_nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - certbot-www:/var/www/certbot
+    depends_on:
+      - dashboard-ui
+      - operator-dashboard
+    networks:
+      - sovr-net
+
+  certbot:
+    image: certbot/certbot
+    container_name: sovr_certbot
+    restart: always
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    # Corrected entrypoint for auto-renewal
+    entrypoint: >
+      sh -c "trap exit TERM; 
+      while :; do certbot renew; sleep 12h & wait $${!}; done"
+
+networks:
+  sovr-net:
+
+volumes:
+  pgdata:
+  certbot-etc:
+  certbot-var:
+  certbot-www:

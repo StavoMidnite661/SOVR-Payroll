@@ -1,0 +1,61 @@
+name: SOVR Payroll Live Siege Test
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  live-siege-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Node Dependencies
+        run: npm install --prefix consul
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Install System Dependencies
+        run: sudo apt-get update && sudo apt-get install -y gnupg jq bc
+
+      - name: Run Live Siege Test Script
+        env:
+          # Use LIVE secrets for this workflow
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_LIVE }}
+          RPC_URL: ${{ secrets.RPC_URL }}
+          OPERATOR_PRIVATE_KEY: ${{ secrets.OPERATOR_PRIVATE_KEY }}
+          EMPLOYEE_PK: ${{ secrets.EMPLOYEE_PK }} # Required for triggerClaim.js
+          PAYROLL_ADDRESS: ${{ secrets.PAYROLL_ADDRESS }}
+          SOVRC_ADDRESS: ${{ secrets.SOVRC_ADDRESS }}
+          EMPLOYEE_ADDR: ${{ secrets.EMPLOYEE_ADDR }} # Required for demo.sh validation
+        run: bash ci/demo.sh
+
+      - name: Import GPG Public Key
+        run: echo "${{ secrets.GPG_PUBLIC_KEY }}" | gpg --import
+
+      - name: Encrypt Proof Artifacts
+        run: |
+          gpg --batch --yes --trust-model always --encrypt --recipient "${{ secrets.GPG_RECIPIENT_EMAIL }}" demo.log
+          gpg --batch --yes --trust-model always --encrypt --recipient "${{ secrets.GPG_RECIPIENT_EMAIL }}" report.json
+          mv demo.log.gpg demo.log.encrypted
+          mv report.json.gpg report.json.encrypted
+
+      - name: Upload Encrypted Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sealed-live-proofs
+          path: |
+            demo.log.encrypted
+            report.json.encrypted
