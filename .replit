@@ -22,6 +22,10 @@ args = "Frontend"
 task = "workflow.run"
 args = "Backend"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Consul"
+
 [[workflows.workflow]]
 name = "Frontend"
 author = "agent"
@@ -46,6 +50,17 @@ task = "shell.exec"
 args = "cd \"full SOVR Payroll system\" && node server.js"
 waitForPort = 3001
 
+[[workflows.workflow]]
+name = "Consul"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd \"full SOVR Payroll system\" && node consul.js"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
 [[ports]]
 localPort = 3001
 externalPort = 3001
@@ -53,3 +68,7 @@ externalPort = 3001
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 38511
+externalPort = 3000

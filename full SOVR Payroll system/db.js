@@ -1,12 +1,15 @@
 const { Pool } = require('pg');
 
-const pool = new Pool({
-  user: process.env.POSTGRES_USER || 'runner',
-  host: process.env.POSTGRES_HOST || 'localhost',
-  database: process.env.POSTGRES_DB || 'sovr_payroll',
-  password: process.env.POSTGRES_PASSWORD || '',
-  port: process.env.POSTGRES_PORT || 5432,
-});
+// Use DATABASE_URL if available (Replit), otherwise use individual env vars
+const pool = process.env.DATABASE_URL 
+  ? new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } })
+  : new Pool({
+      user: process.env.POSTGRES_USER || 'runner',
+      host: process.env.POSTGRES_HOST || 'localhost',
+      database: process.env.POSTGRES_DB || 'sovr_payroll',
+      password: process.env.POSTGRES_PASSWORD || '',
+      port: process.env.POSTGRES_PORT || 5432,
+    });
 
 const initializeDb = async () => {
   const client = await pool.connect();

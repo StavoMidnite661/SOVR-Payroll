@@ -1,5 +1,5 @@
 // operator-dashboard/server.js
-require("dotenv").config({ path: '../.env' }); // Point to the root .env file
+require("dotenv").config(); // Load .env from current directory
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
