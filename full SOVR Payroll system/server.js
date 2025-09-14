@@ -79,8 +79,8 @@ async function syncProofs() {
   }
 }
 
-const server = app.listen(4000, async () => {
-  console.log("Operator Backend running on :4000");
+const server = app.listen(3001, '0.0.0.0', async () => {
+  console.log("Operator Backend running on 0.0.0.0:3001");
   await db.initializeDb();
   await syncProofs(); // Sync proofs on startup
 });
