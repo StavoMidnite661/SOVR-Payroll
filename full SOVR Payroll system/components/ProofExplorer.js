@@ -5,7 +5,7 @@ export default function ProofExplorer() {
 
   useEffect(() => {
     const fetchData = () => {
-      fetch("http://localhost:4000/proofs")
+      fetch("http://localhost:3001/proofs")
         .then(res => res.json())
         .then(setFiles)
         .catch(err => console.error("Failed to fetch proofs:", err));

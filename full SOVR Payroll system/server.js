@@ -129,20 +129,21 @@ wss.on('connection', ws => {
     });
 });
 
-// Ethereum setup
-const payrollAbi = [
-    "event SalaryClaimed(address indexed employee, uint256 amount, uint256 ts)"
-];
-const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
-const payroll = new ethers.Contract(
-  process.env.PAYROLL_ADDRESS,
-  payrollAbi,
-  provider
-);
+// Ethereum setup (optional - only if contract address is configured)
+if (process.env.PAYROLL_ADDRESS && process.env.PAYROLL_ADDRESS !== "0xYOUR_DEPLOYED_AUTOPAYROLL_ADDRESS" && process.env.RPC_URL) {
+  const payrollAbi = [
+      "event SalaryClaimed(address indexed employee, uint256 amount, uint256 ts)"
+  ];
+  const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
+  const payroll = new ethers.Contract(
+    process.env.PAYROLL_ADDRESS,
+    payrollAbi,
+    provider
+  );
 
-console.log(`Listening for SalaryClaimed events on ${process.env.PAYROLL_ADDRESS}`);
+  console.log(`Listening for SalaryClaimed events on ${process.env.PAYROLL_ADDRESS}`);
 
-payroll.on("SalaryClaimed", async (employee, amount, ts, ev) => {
+  payroll.on("SalaryClaimed", async (employee, amount, ts, ev) => {
   try {
     const amountUsd = parseFloat(ethers.utils.formatUnits(amount, 18));
     const event = {
@@ -165,4 +166,7 @@ payroll.on("SalaryClaimed", async (employee, amount, ts, ev) => {
   } catch (err) {
     console.error('[EVM_LISTENER] Error processing SalaryClaimed event:', err);
   }
-});
+  });
+} else {
+  console.log('[EVM_LISTENER] Blockchain integration disabled - PAYROLL_ADDRESS or RPC_URL not configured');
+}

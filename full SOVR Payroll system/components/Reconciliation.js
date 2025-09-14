@@ -5,7 +5,7 @@ export default function Reconciliation() {
 
   useEffect(() => {
     const fetchData = () => {
-      fetch("http://localhost:4000/reconciliation")
+      fetch("http://localhost:3001/reconciliation")
         .then(res => res.json())
         .then(setIncomplete)
         .catch(err => console.error("Failed to fetch reconciliation data:", err));

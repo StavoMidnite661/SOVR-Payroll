@@ -4,7 +4,7 @@ export default function LiveFeed() {
   const [events, setEvents] = useState([]);
 
   useEffect(() => {
-    const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:4000";
+    const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:3001";
     const ws = new WebSocket(WS_URL);
     ws.onmessage = (msg) => {
       const evt = JSON.parse(msg.data);

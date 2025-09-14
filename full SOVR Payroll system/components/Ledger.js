@@ -5,7 +5,7 @@ export default function Ledger() {
 
   useEffect(() => {
     const fetchData = () => {
-      fetch("http://localhost:4000/employees")
+      fetch("http://localhost:3001/employees")
         .then(res => res.json())
         .then(setEmployees)
         .catch(err => console.error("Failed to fetch employee ledger:", err));
