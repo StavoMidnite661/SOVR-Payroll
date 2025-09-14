@@ -5,7 +5,7 @@ export default function Ledger() {
 
   useEffect(() => {
     const fetchData = () => {
-      fetch((process.env.NEXT_PUBLIC_API_URL || 'https://888a5cbb-738b-4169-98fa-e4bfe6d82a15-00-3ztphkfwem77.worf.replit.dev:3001') + '/employees')
+      fetch('/api/employees')
         .then(res => res.json())
         .then(setEmployees)
         .catch(err => console.error("Failed to fetch employee ledger:", err));
