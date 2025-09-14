@@ -4,7 +4,7 @@ export default function LiveFeed() {
   const [events, setEvents] = useState([]);
 
   useEffect(() => {
-    const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:3001";
+    const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "wss://888a5cbb-738b-4169-98fa-e4bfe6d82a15-00-3ztphkfwem77.worf.replit.dev:3001";
     const ws = new WebSocket(WS_URL);
     ws.onmessage = (msg) => {
       const evt = JSON.parse(msg.data);
@@ -25,7 +25,7 @@ export default function LiveFeed() {
             {e.type === "StripePayout" && e.status === "success" && <span className="text-green-400">[PAYOUT]</span>}
             {e.type === "StripePayout" && e.status === "fail" && <span className="text-red-500 font-bold">[PAYOUT FAILED]</span>}
             {e.type === "Burn" && <span className="text-red-400">[BURN]</span>}
-            {` ${e.type}: ${e.amountUsd} USD → ${e.employee.slice(0, 6)}...${e.employee.slice(-4)}`}
+            {` ${e.type}: ${e.amountUsd || 'N/A'} USD → ${e.employee ? `${e.employee.slice(0, 6)}...${e.employee.slice(-4)}` : 'Unknown'}`}
           </li>
         ))}
       </ul>

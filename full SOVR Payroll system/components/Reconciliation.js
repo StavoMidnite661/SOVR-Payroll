@@ -5,7 +5,7 @@ export default function Reconciliation() {
 
   useEffect(() => {
     const fetchData = () => {
-      fetch("http://localhost:3001/reconciliation")
+      fetch((process.env.NEXT_PUBLIC_API_URL || 'https://888a5cbb-738b-4169-98fa-e4bfe6d82a15-00-3ztphkfwem77.worf.replit.dev:3001') + '/reconciliation')
         .then(res => res.json())
         .then(setIncomplete)
         .catch(err => console.error("Failed to fetch reconciliation data:", err));
